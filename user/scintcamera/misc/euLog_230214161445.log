@@ -1,0 +1,75 @@
+
+*** LogCollector started at 1676391285 ***
+[0m[1m[2023-02-14 16:14:45.156] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Receive an INI section
+    <Configuration>
+      <Section title="">
+        <EUDAQ_LOG_ADDR>tcp://127.0.0.1:36537</EUDAQ_LOG_ADDR>
+        <Name>/home/luke/eudaq/eudaq/user/scintcamera/misc/dummy.ini</Name>
+      </Section>
+    </Configuration>
+
+[0m[1m[2023-02-14 16:14:45.156] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Monitor.my_mon is to be initialised...
+[0m[1m[2023-02-14 16:14:45.156] [0m[32;1m(INFO)[0m [Monitor.my_mon ]TCPServer:: Listening on port 41275
+[0m[1m[2023-02-14 16:14:45.257] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Receive an INI section
+    <Configuration>
+      <Section title="">
+        <EUDAQ_LOG_ADDR>tcp://127.0.0.1:36537</EUDAQ_LOG_ADDR>
+        <Name>/home/luke/eudaq/eudaq/user/scintcamera/misc/dummy.ini</Name>
+      </Section>
+    </Configuration>
+
+[0m[1m[2023-02-14 16:14:45.257] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Producer.my_pd0 is to be initialised...
+[0m[1m[2023-02-14 16:14:45.257] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Starting PROD INIT
+[0m[1m[2023-02-14 16:14:45.561] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Number of Cameras: 1
+[0m[1m[2023-02-14 16:14:45.819] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]trying to open camera with Serial Number 0815-0000
+[0m[1m[2023-02-14 16:14:45.819] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]The current state of selected camera 1835098996
+[0m[1m[2023-02-14 16:14:46.158] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Monitor.my_mon is initialised.
+[0m[1m[2023-02-14 16:14:46.353] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Finished PROD INIT
+[0m[1m[2023-02-14 16:14:46.353] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Producer.my_pd0 is initialised.
+[0m[1m[2023-02-14 16:14:49.369] [0m[32;1m(INFO)[0m [RunControl.RC-GUI ]Processing Configure command
+[0m[1m[2023-02-14 16:14:49.369] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Receive a CONF section
+    <Configuration>
+      <Section title="">
+        <LogCollector.log>tcp://127.0.0.1:36537</LogCollector.log>
+        <Monitor.my_mon>tcp://127.0.0.1:41275</Monitor.my_mon>
+        <Name>/home/luke/eudaq/eudaq/user/scintcamera/misc/dummy.conf</Name>
+      </Section>
+    </Configuration>
+
+[0m[1m[2023-02-14 16:14:49.369] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Receive a CONF section
+    <Configuration>
+      <Section title="">
+        <LogCollector.log>tcp://127.0.0.1:36537</LogCollector.log>
+        <Monitor.my_mon>tcp://127.0.0.1:41275</Monitor.my_mon>
+        <Name>/home/luke/eudaq/eudaq/user/scintcamera/misc/dummy.conf</Name>
+      </Section>
+    </Configuration>
+
+[0m[1m[2023-02-14 16:14:49.369] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Monitor.my_mon is to be configured...
+[0m[1m[2023-02-14 16:14:49.369] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Producer.my_pd0 is to be configured...
+[0m[1m[2023-02-14 16:14:49.369] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Monitor.my_mon is configured.
+[0m[1m[2023-02-14 16:14:49.369] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Starting PROD CONF
+[0m[1m[2023-02-14 16:14:49.370] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Finished PROD CONF
+[0m[1m[2023-02-14 16:14:49.370] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Producer.my_pd0 is configured.
+[0m[1m[2023-02-14 16:14:51.855] [0m[32;1m(INFO)[0m [RunControl.RC-GUI ]Processing StartRun command for RUN #10
+[0m[1m[2023-02-14 16:14:51.955] [0m[32;1m(INFO)[0m [Monitor.my_mon ]RUN #10 is to be started...
+[0m[1m[2023-02-14 16:14:51.956] [0m[32;1m(INFO)[0m [Monitor.my_mon ]RUN #10 is started.
+[0m[1m[2023-02-14 16:14:54.056] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]RUN #10 is to be started...
+[0m[1m[2023-02-14 16:14:54.056] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Starting PROD STARTRUN
+[0m[1m[2023-02-14 16:14:54.057] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Succesfully Opened Camera
+[0m[1m[2023-02-14 16:14:54.057] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Selecting Test Image
+[0m[1m[2023-02-14 16:14:54.057] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Test Image Succesfully Selected
+[0m[1m[2023-02-14 16:14:54.057] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Finished PROF STARTRUN
+[0m[1m[2023-02-14 16:14:54.057] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]RUN #10 is started.
+[0m[1m[2023-02-14 16:15:14.264] [0m[33;1m(WARN)[0m [Producer.my_pd0 ]CommandReceiver: User's RunLoop exits during the running (20 seconds ago)
+[0m[1m[2023-02-14 16:16:10.984] [0m[32;1m(INFO)[0m [RunControl.RC-GUI ]Processing StopRun command for RUN #10
+[0m[1m[2023-02-14 16:16:10.984] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]RUN #10 is to be stopped...
+[0m[1m[2023-02-14 16:16:11.277] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]RUN #10 is stopped.
+[0m[1m[2023-02-14 16:16:12.285] [0m[32;1m(INFO)[0m [Monitor.my_mon ]RUN #10 is to be stopped...
+[0m[1m[2023-02-14 16:16:13.473] [0m[32;1m(INFO)[0m [Monitor.my_mon ]RUN #10 is stopped.
+[0m[1m[2023-02-14 16:16:19.442] [0m[32;1m(INFO)[0m [RunControl.RC-GUI ]Processing StartRun command for RUN #11
+[0m[1m[2023-02-14 16:16:19.543] [0m[32;1m(INFO)[0m [Monitor.my_mon ]RUN #11 is to be started...
+[0m[1m[2023-02-14 16:16:19.543] [0m[32;1m(INFO)[0m [Monitor.my_mon ]RUN #11 is started.
+[0m[1m[2023-02-14 16:16:21.643] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]RUN #11 is to be started...
+[0m[1m[2023-02-14 16:16:21.643] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Starting PROD STARTRUN
+[0m[1m[2023-02-14 16:17:18.533] [0m[32;1m(INFO)[0m [RunControl.RC-GUI ]Processing Terminate command

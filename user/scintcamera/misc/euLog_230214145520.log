@@ -1,0 +1,61 @@
+
+*** LogCollector started at 1676386520 ***
+[0m[1m[2023-02-14 14:55:20.865] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Receive an INI section
+    <Configuration>
+      <Section title="">
+        <EUDAQ_LOG_ADDR>tcp://127.0.0.1:39381</EUDAQ_LOG_ADDR>
+        <Name>/home/luke/eudaq/eudaq/user/scintcamera/misc/dummy.ini</Name>
+      </Section>
+    </Configuration>
+
+[0m[1m[2023-02-14 14:55:20.865] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Monitor.my_mon is to be initialised...
+[0m[1m[2023-02-14 14:55:20.866] [0m[32;1m(INFO)[0m [Monitor.my_mon ]TCPServer:: Listening on port 35271
+[0m[1m[2023-02-14 14:55:20.966] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Receive an INI section
+    <Configuration>
+      <Section title="">
+        <EUDAQ_LOG_ADDR>tcp://127.0.0.1:39381</EUDAQ_LOG_ADDR>
+        <Name>/home/luke/eudaq/eudaq/user/scintcamera/misc/dummy.ini</Name>
+      </Section>
+    </Configuration>
+
+[0m[1m[2023-02-14 14:55:20.966] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Producer.my_pd0 is to be initialised...
+[0m[1m[2023-02-14 14:55:20.966] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Starting PROD INIT
+[0m[1m[2023-02-14 14:55:21.282] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Number of Cameras: 1
+[0m[1m[2023-02-14 14:55:21.543] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Camera Serial Number: 0815-0000
+[0m[1m[2023-02-14 14:55:21.543] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]trying to open camera with SN 0815-0000
+[0m[1m[2023-02-14 14:55:21.867] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Monitor.my_mon is initialised.
+[0m[1m[2023-02-14 14:55:22.080] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Finished PROD INIT
+[0m[1m[2023-02-14 14:55:22.080] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Producer.my_pd0 is initialised.
+[0m[1m[2023-02-14 14:55:23.997] [0m[32;1m(INFO)[0m [RunControl.RC-GUI ]Processing Configure command
+[0m[1m[2023-02-14 14:55:23.998] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Receive a CONF section
+    <Configuration>
+      <Section title="">
+        <LogCollector.log>tcp://127.0.0.1:39381</LogCollector.log>
+        <Monitor.my_mon>tcp://127.0.0.1:35271</Monitor.my_mon>
+        <Name>/home/luke/eudaq/eudaq/user/scintcamera/misc/dummy.conf</Name>
+      </Section>
+    </Configuration>
+
+[0m[1m[2023-02-14 14:55:23.998] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Receive a CONF section
+    <Configuration>
+      <Section title="">
+        <LogCollector.log>tcp://127.0.0.1:39381</LogCollector.log>
+        <Monitor.my_mon>tcp://127.0.0.1:35271</Monitor.my_mon>
+        <Name>/home/luke/eudaq/eudaq/user/scintcamera/misc/dummy.conf</Name>
+      </Section>
+    </Configuration>
+
+[0m[1m[2023-02-14 14:55:23.998] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Monitor.my_mon is to be configured...
+[0m[1m[2023-02-14 14:55:23.998] [0m[32;1m(INFO)[0m [Monitor.my_mon ]Monitor.my_mon is configured.
+[0m[1m[2023-02-14 14:55:23.998] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Producer.my_pd0 is to be configured...
+[0m[1m[2023-02-14 14:55:23.998] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Starting PROD CONF
+[0m[1m[2023-02-14 14:55:23.998] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Finished PROD CONF
+[0m[1m[2023-02-14 14:55:23.998] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]Producer.my_pd0 is configured.
+[0m[1m[2023-02-14 14:55:44.811] [0m[32;1m(INFO)[0m [RunControl.RC-GUI ]Processing StartRun command for RUN #6
+[0m[1m[2023-02-14 14:55:44.912] [0m[32;1m(INFO)[0m [Monitor.my_mon ]RUN #6 is to be started...
+[0m[1m[2023-02-14 14:55:44.912] [0m[32;1m(INFO)[0m [Monitor.my_mon ]RUN #6 is started.
+[0m[1m[2023-02-14 14:55:47.012] [0m[32;1m(INFO)[0m [Producer.my_pd0 ]RUN #6 is to be started...
+[0m[1m[2023-02-14 14:55:47.012] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Starting PROD STARTRUN
+[0m[1m[2023-02-14 14:55:47.013] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Opened Camera
+[0m[1m[2023-02-14 14:55:47.013] [0m[31;1m(DEBUG)[0m [Producer.my_pd0 ]Selecting Test Image
+[0m[1m[2023-02-14 14:57:35.577] [0m[32;1m(INFO)[0m [RunControl.RC-GUI ]Processing Terminate command
