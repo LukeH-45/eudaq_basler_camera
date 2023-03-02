@@ -76,12 +76,12 @@ public:
   static const uint32_t m_id_factory = eudaq::cstr2hash("DummyProducer");
 
 private:
+
   bool m_running;
 
-  OurCameraEventHandler* pHandler1;
-  Pylon::CBaslerUniversalInstantCamera* camera;
-  //Pylon::IGigETransportLayer* pTl;
-  Pylon::IPylonDevice* device;
+  //Ini vars
+  bool enable_cam_emu;
+  std::string cam_serial_number;
 
   //Configurable vars
   float imagegrabtimeout;// = 10000;  // in ms
@@ -115,8 +115,13 @@ private:
   int binning_x;
   int binning_y;
 
-  bool enable_cam_emu;
+  //
+  OurCameraEventHandler* pHandler1;
+  Pylon::CBaslerUniversalInstantCamera* camera;
+  //Pylon::IGigETransportLayer* pTl;
+  Pylon::IPylonDevice* device;
 
+  //Other
   Basler_UniversalCameraParams::PixelFormatEnums pixel_format = Basler_UniversalCameraParams::PixelFormat_Mono12Packed;
   Basler_UniversalCameraParams::TriggerSelectorEnums trigger_start_type = Basler_UniversalCameraParams::TriggerSelector_FrameStart;
   Basler_UniversalCameraParams::TriggerModeEnums trigger_onoff = Basler_UniversalCameraParams::TriggerMode_On;
@@ -130,9 +135,6 @@ private:
 
   uint64_t images_taken;
   bool initialized;
-  std::chrono::steady_clock::time_point time_after_trigger{};
-  std::chrono::duration<double> time_between_triggers;
-  std::chrono::steady_clock::time_point time_before_trigger{};
 };
 
 namespace{
@@ -151,14 +153,7 @@ DummyProducer::~DummyProducer(){
 
 void DummyProducer::RunLoop(){
   try{
-    /*Pylon::CTlFactory& TlFactory = Pylon::CTlFactory::GetInstance();
-    Pylon::IGigETransportLayer* pTl = dynamic_cast<Pylon::IGigETransportLayer*>(TlFactory.CreateTl( Pylon::BaslerGigEDeviceClass ));
-    if (!pTl)
-      {
-        std::cerr << "Error: No GigE transport layer installed." << std::endl;
-        std::cerr << "       Please install GigE support as it is required for this sample." << std::endl;
-        DoTerminate();
-      }*/
+
     camera->TriggerSelector.SetValue(trigger_start_type);
     // Enable triggered image acquisition for the Frame Start trigger
     camera->TriggerMode.SetValue(trigger_onoff);
@@ -170,19 +165,15 @@ void DummyProducer::RunLoop(){
     Pylon::CBaslerUniversalGrabResultPtr ptrGrabResult;
 
     while(m_running){
-
-      if(camera->WaitForFrameTriggerReady( 10000, Pylon::TimeoutHandling_ThrowException )){
-        std::cout << "camera ready and waiting " << std::endl;
+      if(camera->WaitForFrameTriggerReady(10000, Pylon::TimeoutHandling_ThrowException )){
+        EUDAQ_INFO("Camera ready and waiting");
         // Generate a software trigger signal
-        time_before_trigger = std::chrono::steady_clock::now();
         camera->TriggerSoftware.Execute();
-        time_between_triggers = time_before_trigger - time_after_trigger;
-        time_after_trigger = std::chrono::steady_clock::now();
       }
       camera->RetrieveResult( imagegrabtimeout,  ptrGrabResult);   // try to get one of the camera image results
       if (ptrGrabResult->GrabSucceeded()){
-        std::cout << "Succesfully grabbed image" << std::endl;
-        std::string filename =  filelocation + "image" + (images_taken==0?"_t=0_":("_t=" + std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>(time_between_triggers).count())) + "_") + std::to_string(images_taken);
+        EUDAQ_INFO("Succesfully grabbed image");
+        std::string filename =  filelocation + "image_" + std::to_string(images_taken) + ".tiff";
         Pylon::CImagePersistence::Save( Pylon::ImageFileFormat_Tiff, filename.c_str(), ptrGrabResult );     // save the image taken, in the previsouly defined path, with parameters as above
         images_taken++;
       }else{
@@ -190,26 +181,29 @@ void DummyProducer::RunLoop(){
       }
       ptrGrabResult.Release();
       if(images_taken == max_images){
-        DoStopRun();
+        EUDAQ_INFO("Maximum number of images taken ("+std::to_string(max_images)+"), the producer won't do anything anymore until you restart.");
         m_running=false;
       }
     }
   }catch(const GenICam_3_1_Basler_pylon::GenericException& e){
-    std::cerr << "An exception occurred." << std::endl << e.GetDescription() << std::endl;
+    EUDAQ_THROW("An exception occurred.\n" + (std::string)e.GetDescription());
 
   }catch(const std::exception e){
-    std::cerr << "An exception occurred: " << e.what() << std::endl;
+    EUDAQ_THROW("An exception occurred: " + (std::string)e.what());
   }
 
-
- 
 }
 
 void DummyProducer::DoInitialise(){
   EUDAQ_DEBUG("Starting PROD INIT");
+
+  // Get values from ini file
   auto ini = GetInitConfiguration();
   enable_cam_emu = ini->Get<bool>("ENABLE_CAM_EMU",true);
+  cam_serial_number = ini->Get("CAM_SERIAL_NUMBER", "24301947");
+
   EUDAQ_DEBUG("enable_cam_emu = "+ std::to_string(enable_cam_emu));
+
   if(enable_cam_emu){
 #if defined(PYLON_WIN_BUILD)
     _putenv("PYLON_CAMEMU=1");
@@ -217,29 +211,43 @@ void DummyProducer::DoInitialise(){
     setenv("PYLON_CAMEMU", "1", true);
 #endif
   }
+
   Pylon::PylonInitialize();
+
   pHandler1 = new OurCameraEventHandler;
 
   Pylon::DeviceInfoList_t devices;
-  if (Pylon::CTlFactory::GetInstance().EnumerateDevices(devices) == 0){
+
+  // Get the transport layer factory.
+  Pylon::CTlFactory& tlFactory = Pylon::CTlFactory::GetInstance();
+
+  uint64_t n_cameras = tlFactory.EnumerateDevices(devices);
+
+  if (n_cameras == 0){
     EUDAQ_DEBUG("No camera present.");
     Pylon::PylonTerminate();
     EUDAQ_THROW("No camera present.");
   }
-   // Get the transport layer factory.
-  Pylon::CTlFactory& tlFactory = Pylon::CTlFactory::GetInstance();
-  //if(enable_cam_emu){
-    //pTl = dynamic_cast<Pylon::IGigETransportLayer*>(tlFactory.CreateTl( Pylon::BaslerGigEDeviceClass ));
-    //if (!pTl)
-    //{
-      //EUDAQ_THROW("Error: No GigE transport layer installed.\n       Please install GigE support as it is required for this sample.");
-    //}
- // }
+
+  EUDAQ_DEBUG("Number of Cameras: "+std::to_string(n_cameras));
+
   Pylon::CDeviceInfo deviceInfo;
+  if(!enable_cam_emu){
+    bool device_found = false;
+    for(uint64_t i=0; i < n_cameras; i++){
 
-  EUDAQ_DEBUG("Number of Cameras: "+std::to_string(tlFactory.EnumerateDevices(devices)));
-  deviceInfo.SetSerialNumber(devices[0].GetSerialNumber());
-
+      if(devices[i].GetSerialNumber().c_str() == cam_serial_number){
+        deviceInfo.SetSerialNumber(devices[i].GetSerialNumber());
+        device_found = true;
+        EUDAQ_DEBUG("Found camera with serial number: "+cam_serial_number);
+      }
+    }
+    if(!device_found){
+      EUDAQ_THROW("Could not find camera with serial number: "+cam_serial_number);
+    }
+  }else{
+    deviceInfo.SetSerialNumber(devices[0].GetSerialNumber());
+  }
 
   initialized = false;
 
@@ -247,11 +255,10 @@ void DummyProducer::DoInitialise(){
   // Without that check, the following CreateDevice() may crash on duplicate
   // serial number. Unfortunately, this call is slow.
   Pylon::EDeviceAccessiblityInfo isAccessableInfo;
-  EUDAQ_DEBUG("trying to open camera with Serial Number " + std::string(deviceInfo.GetSerialNumber()));
-  EUDAQ_DEBUG( "The current state of selected camera " + EnumToString(isAccessableInfo));
-  if (!tlFactory.IsDeviceAccessible(deviceInfo, Pylon::Control, &isAccessableInfo)){
-    //EUDAQ_DEBUG("trying to open camera with SN " + std::string(deviceInfo.GetSerialNumber()));
-    //EUDAQ_DEBUG( "The current state of selected camera " + EnumToString(isAccessableInfo));
+  auto IsDeviceAccessible = tlFactory.IsDeviceAccessible(deviceInfo, Pylon::Control, &isAccessableInfo);
+  EUDAQ_DEBUG("Trying to open camera with Serial Number " + std::string(deviceInfo.GetSerialNumber()));
+  EUDAQ_INFO( "Accessiblilty Status: " + EnumToString(isAccessableInfo));
+  if (!IsDeviceAccessible){
     EUDAQ_ERROR("Can't Connect to Camera");
   }
   EUDAQ_DEBUG("Creating Device");
@@ -281,13 +288,15 @@ void DummyProducer::DoConfigure(){
   EUDAQ_DEBUG("Starting PROD CONF");
   auto conf = GetConfiguration();
 
+  // A lot of settings copied from John's code
+  // Can be found in ../../misc/dummy.conf
   imagegrabtimeout = conf->Get("imagegrabtimeout", 10000);
   imagestograb = conf->Get("imagestograb",1);
   framerate = conf->Get("framerate",0.25);
   max_buffer_frames = conf->Get("max_buffer_frames",100);
   max_images = conf->Get("max_images",10);
   filelocation = conf->Get("filelocation", "./");
-  frameratebool = conf->Get("frameratebool",false);
+  frameratebool = conf->Get<bool>("frameratebool",false);
   network_capacity = conf->Get("network_capacity", 50.);
   safety_factor = conf->Get("safety_factor", 1.1);
   exposure_time_us = conf->Get("exposure_time_us", 300000);
@@ -306,14 +315,13 @@ void DummyProducer::DoConfigure(){
   binning_x = conf->Get("binning_x",1);
   binning_y = conf->Get("binning_y",1);
 
-  //ADD CAMERA SETTINGS
-
   EUDAQ_DEBUG("Finished PROD CONF");
-
 }
 
 void DummyProducer::DoStartRun(){
+
   EUDAQ_DEBUG("Starting PROD STARTRUN");
+
   if(camera->IsPylonDeviceAttached()){
     if(!camera->IsOpen()){
     camera->Open();
@@ -331,6 +339,7 @@ void DummyProducer::DoStartRun(){
     EUDAQ_DEBUG("Test Image Succesfully Selected");
   }else{
     try{
+    // Setting up the camera (pasted from John's code, edited to integrate it with EUDAQ)
     if (!camera->EventSelector.IsWritable())
 	    {
 	      throw RUNTIME_EXCEPTION( "The device doesn't support events." );
@@ -340,6 +349,7 @@ void DummyProducer::DoStartRun(){
 	    {
 	      throw RUNTIME_EXCEPTION( "The camera doesn't support chunk features" );
 	    }
+      std::string current_cam_sn = camera->GetDeviceInfo().GetSerialNumber().c_str();
 	  // use some objects from only the first camera
 	  camera->ChunkSelector.SetValue( Basler_UniversalCameraParams::ChunkSelector_Triggerinputcounter );
 	  camera->ChunkEnable.SetValue(true);
@@ -355,18 +365,18 @@ void DummyProducer::DoStartRun(){
 	  camera->CounterSelector.SetValue( Basler_UniversalCameraParams::CounterSelector_Counter1 );
 	  camera->CounterResetSource.SetValue( Basler_UniversalCameraParams::CounterResetSource_Software );
 
-	  camera->MaxNumBuffer = max_buffer_frames; std::cout << std::endl << "MaxNumBuffer " << camera->MaxNumBuffer.GetValue() << " Set for camera " << std::endl;
+	  camera->MaxNumBuffer = max_buffer_frames; EUDAQ_INFO("MaxNumBuffer " + std::to_string(camera->MaxNumBuffer.GetValue()) +" Set for camera "+ current_cam_sn); //std::cout << std::endl << "MaxNumBuffer " << camera->MaxNumBuffer.GetValue() << " Set for camera " << std::endl;
 	  camera->Width.SetValue(pixel_n_x);
-	  camera->Height.SetValue(pixel_n_y); std::cout << "width (pixels): " << camera->Width.GetValue() << " and height: " << camera->Height.GetValue() << " for camera " << std::endl;
+	  camera->Height.SetValue(pixel_n_y); EUDAQ_INFO("width (pixels): " + std::to_string(camera->Width.GetValue()) + " and height: " + std::to_string(camera->Height.GetValue()) +" for camera "+ current_cam_sn); //std::cout << "width (pixels): " << camera->Width.GetValue() << " and height: " << camera->Height.GetValue() << " for camera " << std::endl;
 	  if(!centerimage){
 	    camera->OffsetX.SetValue(pixel_x_offset);
 	    camera->OffsetY.SetValue(pixel_y_offset);
-	    std::cout << "offsetX (pixels): " << camera->OffsetX.GetValue() << " and OffsetY: " << camera->OffsetY.GetValue() << " set for camera " << std::endl;
+	    EUDAQ_INFO("offsetX (pixels): " + std::to_string(camera->OffsetX.GetValue()) + " and OffsetY: " + std::to_string(camera->OffsetY.GetValue()) + " set for camera " + current_cam_sn); //std::cout << "offsetX (pixels): " << camera->OffsetX.GetValue() << " and OffsetY: " << camera->OffsetY.GetValue() << " set for camera " << std::endl;
 	  }
 	  else{
 	    camera->CenterX.SetValue(true);
 	    camera->CenterY.SetValue(true);
-        std::cout << "image centered in sensor, offsetX (pixels): " << camera->OffsetX.GetValue() << " and OffsetY: " << camera->OffsetY.GetValue() << " set " << std::endl;
+        EUDAQ_INFO("image centered in sensor, offsetX (pixels): " + std::to_string(camera->OffsetX.GetValue()) + " and OffsetY: " + std::to_string(camera->OffsetY.GetValue()) + " set for camera " + current_cam_sn); //std::cout << "image centered in sensor, offsetX (pixels): " << camera->OffsetX.GetValue() << " and OffsetY: " << camera->OffsetY.GetValue() << " set " << std::endl;
       }
 
 	  if(binning){
@@ -374,35 +384,35 @@ void DummyProducer::DoStartRun(){
 	    camera->BinningHorizontal.SetValue(binning_x);
 	  }
 	  camera->PixelFormat.SetValue(pixel_format);
-	  if (camera->PixelFormat.GetValue()==41){ std::cout << "Pixel Format Set with Mono 12 Packed for camera " << std::endl;}
-	  else if (camera->PixelFormat.GetValue()==40){std::cout << "Pixel Format Set with Mono 12 for camera " << std::endl;}
-	  else if (camera->PixelFormat.GetValue()==44){std::cout << "Pixel Format Set with Mono 8 for camera " << std::endl;}
-	  else {std::cout << "Pixel Format not recognised :/ for camera " << std::endl;}
+	  if (camera->PixelFormat.GetValue()==41){ EUDAQ_INFO("Pixel Format Set with Mono 12 Packed for camera "+ current_cam_sn);}
+	  else if (camera->PixelFormat.GetValue()==40){EUDAQ_INFO("Pixel Format Set with Mono 12 for camera "+ current_cam_sn);}
+	  else if (camera->PixelFormat.GetValue()==44){EUDAQ_INFO("Pixel Format Set with Mono 8 for camera " + current_cam_sn);}
+	  else {EUDAQ_INFO("Pixel Format not recognised :/ for camera "+current_cam_sn);}
 
-	  camera->GainRaw.SetValue(gain_raw); std::cout << "Gain Set with " <<  camera->GainRaw.GetValue() << " for camera " << std::endl;
-	  camera->ExposureTimeAbs.SetValue(exposure_time_us); std::cout << "Exposure time Set at " << camera->ExposureTimeAbs.GetValue() << "microseconds for camera " << std::endl;
+	  camera->GainRaw.SetValue(gain_raw); EUDAQ_INFO("Gain Set with " +  std::to_string(camera->GainRaw.GetValue()) + " for camera "+ current_cam_sn);//std::cout << "Gain Set with " <<  camera->GainRaw.GetValue() << " for camera " << std::endl;
+	  camera->ExposureTimeAbs.SetValue(exposure_time_us);EUDAQ_INFO("Exposure time Set at " + std::to_string(camera->ExposureTimeAbs.GetValue()) + "microseconds for camera " + current_cam_sn); //std::cout << "Exposure time Set at " << camera->ExposureTimeAbs.GetValue() << "microseconds for camera " << std::endl;
 	  camera->AcquisitionFrameRateEnable.SetValue(frameratebool);
 	  camera->TriggerMode.SetValue(trigger_onoff);
-	  if(trigger_onoff){std::cout << "Trigger On" << std::endl;}
+	  if(trigger_onoff){EUDAQ_INFO("Trigger On for camera "+current_cam_sn);}
 	  camera->TriggerSelector.SetValue( Basler_UniversalCameraParams::TriggerSelector_FrameStart );
-	  std::cout << "Trigger Selector: " <<	camera->TriggerSelector.GetValue() << std::endl;
+	  EUDAQ_INFO("Trigger Selector: " +	std::to_string(camera->TriggerSelector.GetValue()) + "for camera "+current_cam_sn);//std::cout << "Trigger Selector: " <<	camera->TriggerSelector.GetValue() << std::endl;
 	  camera->TriggerSource.SetValue(trigger_source);
-	  std::cout << "Trigger Source: " << camera->TriggerSource.GetValue() << std::endl;
+	  EUDAQ_INFO("Trigger Source: " + std::to_string(camera->TriggerSource.GetValue())+ "for camera "+ current_cam_sn);//std::cout << "Trigger Source: " << camera->TriggerSource.GetValue() << std::endl;
 
-
-	  int64_t payloadSize = camera->PayloadSize.GetValue();
+	  //int64_t payloadSize = camera->PayloadSize.GetValue();
 
 	  camera->GevSCPSPacketSize.SetValue(packet_size);
 
-	  std::cout << "Optimising GigE data streaming for " << payloadSize/1000000. << "MB images; Packet Size is " << packet_size << " bits and Inter-Packet Delay is " << inter_packet_delay << " camera-ticks for camera " << std::endl;
+	  //std::cout << "Optimising GigE data streaming for " << payloadSize/1000000. << "MB images; Packet Size is " << packet_size << " bits and Inter-Packet Delay is " << inter_packet_delay << " camera-ticks for camera " << std::endl;
 
-	  std::cout << "Camera tick frequency: " << camera->GevTimestampTickFrequency.GetValue() << " Hz for camera " << std::endl;
+	  EUDAQ_INFO("Camera tick frequency: " + std::to_string(camera->GevTimestampTickFrequency.GetValue()) + " Hz for camera "+current_cam_sn);//std::cout << "Camera tick frequency: " << camera->GevTimestampTickFrequency.GetValue() << " Hz for camera " << std::endl;
 
 	  camera->GevStreamChannelSelector.SetValue( Basler_UniversalCameraParams::GevStreamChannelSelector_StreamChannel0 );
 
 	  //camera.GevSCFTD.SetValue(0);
 	  //camera.GevStreamChannelSelector.SetValue(GevStreamChannelSelector_StreamChannel0);
 	  camera->GevSCPD.SetValue(0);
+
     }catch(const std::exception e){
         EUDAQ_THROW(e.what());
       }catch(const GenICam_3_1_Basler_pylon::GenericException& e){
@@ -422,7 +432,6 @@ void DummyProducer::DoStopRun(){
       camera->Close();
     }
   }
-
 }
 
 void DummyProducer::DoReset(){
@@ -436,7 +445,6 @@ void DummyProducer::DoReset(){
     camera->DestroyDevice();
   }
   Pylon::PylonTerminate();
-
 }
 
 void DummyProducer::DoTerminate() {
